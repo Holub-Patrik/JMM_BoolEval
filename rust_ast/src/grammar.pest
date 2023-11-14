@@ -1,0 +1,13 @@
+Program = _{ SOI ~ Expr ~ EOI }
+
+Expr = { UnaryExpr | BinaryExpr }
+
+Term = { "0" | "1" | Expr }
+
+UnaryExpr = { "!" ~ Term }
+
+BinaryExpr = { "(" ~ Term ~ Operator ~ Term ~ ")" }
+
+Operator = { "&" | "|" | "=>" | "<=>" }
+
+WHITESPACE = _{ " " | "\t" }

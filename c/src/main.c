@@ -3,6 +3,17 @@
 #include <string.h>
 
 int main() {
+	// -- static string
+	char x[15];
+	fgets(x, 15, stdin);
+	printf("%s\n", x);
+
+	int a;
+	int b;
+	scanf("%d %d\n", &a, &b);
+	printf("a:%d b:%d", a, b);
+	// -- dynamic string
+	printf("Dynamic string testing: \n");
 	char *usr_in;
 	usr_in = (char *) malloc(10);
 	scanf("%[^\n]s", usr_in);

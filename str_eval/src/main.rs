@@ -3,6 +3,9 @@
  * [op, op, op, op, op .. ]
  * lsh = num_of bitshifts to get the value
  * lhs, rhs, ret = cluster
+ * (  ( ( ) ( ) ) (  (  )  )  )
+ * 1  2 3 4 5 6 7 8  9  10 11 12
+ * 12 7 4 3 6 4 2 11 10 9  8  1
  */ 
 
 use regex::Regex;
@@ -14,6 +17,7 @@ pub enum Operators {
     OR,
     IMPL,
     EQ,
+    NULL,
 }
 
 impl Operators {
@@ -23,10 +27,11 @@ impl Operators {
             Self::OR => lhs || rhs,
             Self::EQ => lhs == rhs,
             Self::IMPL => lhs <= rhs,
-            Self::NOT => !rhs
+            Self::NOT => !rhs,
+            Self::NULL => unreachable!(),
         }
     }
-}
+} 
 
 fn bob_builder() {
     
@@ -49,22 +54,44 @@ fn main() {
     }
     let val_name_slice = &val_names;
     
-    let mut indx_pairs:Vec<(usize,usize)> = vec![];
+    let mut indx_pairs:Vec<(usize,usize)> = vec![(0,0);trim_input.len()];
     let mut indx_start:Vec<usize> = vec![];
 
     let mut i:usize = 0;
     for char in trim_input.chars(){
         match char {
             '(' => indx_start.push(i),
-            ')' => indx_pairs.push((indx_start.pop().unwrap(),i)),
+            ')' => {
+                let pop_val = indx_start.pop().unwrap();
+                indx_pairs[pop_val] = (pop_val,i);
+            },
             _ => {},
             
         }
         i += 1;
     }
-
+    //sort the indx_pairs
+    for(start, end) in indx_pairs.clone() {
+        indx_pairs.insert(end, (end,start));
+    }
+    indx_pairs.retain(|&x| x != (0,0));
+    //small fix
     for (start, end) in &indx_pairs {
         println!("{} : {}", start, end)
+    }
+    
+    let mut clusters:[(usize,usize, bool);64] = [(0,0,false);64]; 
+    let mut ops:[&str;64] = ["";64];
+    
+    let mut cluster_indx = 0;
+    for i in 0 .. indx_pairs.len()-1 {
+        let (_, end) = indx_pairs[i];
+        let (start, _) = indx_pairs[i+1];
+        if end == start {
+            clusters[cluster_indx] = (trim_input.chars().nth(start+1).unwrap(),trim_input.chars().nth(end-1).unwrap(),false);
+            ops[cluster_indx] = (trim_input.chars().nth(start+2).unwrap())
+        }
+            
     }
 
     println!("Prep ends! Took:")

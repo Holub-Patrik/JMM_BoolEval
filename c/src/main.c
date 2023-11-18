@@ -1,29 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+
+char *input() {
+	u_int mem = 8;
+	u_int mem_i = 1;
+	
+	char *s;
+	s = malloc(mem);
+	
+	int i = 0;
+	while (1) {
+		int c = getchar();
+
+		if(i == mem_i*mem) { 
+			mem_i++;
+			s = realloc(s, mem_i*mem);
+		}
+
+		if (c != 10 && c >= 32) {
+			s[i] = c;
+			i++;
+		}
+
+		if (c == 10) {
+			s[i] = '\0';
+			break;
+		}
+	}
+	return s;
+}
 
 int main() {
-	// -- static string
-	char x[15];
-	fgets(x, 15, stdin);
-	printf("%s\n", x);
-
-	int a;
-	int b;
-	scanf("%d %d\n", &a, &b);
-	printf("a:%d b:%d", a, b);
-	// -- dynamic string
-	printf("Dynamic string testing: \n");
-	char *usr_in;
-	usr_in = (char *) malloc(10);
-	scanf("%[^\n]s", usr_in);
-
-	printf("%s\nString length: %lu\n", usr_in, strlen(usr_in));
-	printf("I will write the tenth char: %c\n", usr_in[10]);
-
-	for(int i = 0; i < strlen(usr_in); i++) {
-		printf("%c", usr_in[i]);
-	}
-	printf("\n");
+	char* usr_in;
+	usr_in = input();
+	printf("%s\n", usr_in);
 	return 0;
 }

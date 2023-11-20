@@ -66,14 +66,14 @@ impl BoolTable<'_> {
         }
     }
 
-    fn str_eval(&self, lhs:&str, rhs:&str, op:&str) -> Result<bool, &str> {
+    fn str_eval(&self, lhs:&str, rhs:&str, op:&str) -> Result<bool, String> {
         let mut b_lhs:bool;
         let mut b_rhs:bool;
          
         if self.verbose {println!("str_eval(): Matching operator...");}
         let b_op:&Operator = match self.charset.get(op) {
             Some(op) => op,
-            None => return Err("Invalid operator!"),
+            None => return Err("Operator not in charset!".to_string()),
         };
         if self.verbose {println!("str_eval(): Matched operator: {}", b_op);}
 
@@ -133,20 +133,20 @@ impl BoolTable<'_> {
         return val;
     }
 
-    pub fn rec_eval(&self, equation:Option<&str>) -> Result<bool, &str> {
+    pub fn rec_eval(&self, equation:Option<&str>) -> Result<bool, String> {
         let eq = equation.unwrap_or(self.equation);
         if self.verbose {println!("rec_eval(): Evaluation: {} With int repr: {:#010b}", eq, self.curr_int);}
         
         let Some(parts) = self.re.captures(&eq) else {
             if self.verbose {println!("invalid string!");}
-            return Err("Invalid string!");
+            return Err("Invalid string!".to_string());
         };
         if self.verbose {println!("rec_eval(): evaluting:{} {} {}",&parts["lhs"], &parts["rhs"], &parts["op"]);}
         let answr = self.str_eval(&parts["lhs"], &parts["rhs"], &parts["op"]);
         return answr;
     }
 
-    pub fn create_table(&mut self) -> Result<(), &str> {
+    pub fn create_table(&mut self) -> Result<(), String> {
         let complete_add_value:u128 = !self.tr_val_int;
         let size = self.var_to_indx.len();
 
@@ -162,15 +162,16 @@ impl BoolTable<'_> {
                 line.push(curr_val);
             }
             if self.verbose {println!("----------Calling for recursive evaluation!----------");}
-            let result = self.rec_eval(None);
-            if result.is_err() {
-                return Err("Invalid Boolean Equation!");
-            } 
-            let mut push_val = result.unwrap();
+            let result = match self.rec_eval(None){
+                Ok(val) => val,
+                Err(err) => return Err(err),
+            };
+            
             if self.equation.chars().nth(0).unwrap() == '!'{
-                push_val = !push_val
+                line.push(!result)
+            } else {
+                line.push(result)
             }
-            line.push(push_val);
             self.result_table.push(line);
             self.curr_int += 1;
             if self.verbose {println!("----------Recursive Evaluation done----------\n");}

@@ -2,6 +2,7 @@ use std::fmt;
 use std::collections::HashMap;
 use regex::Regex;
 
+
 pub enum Operator {
     AND,
     OR,
@@ -65,17 +66,23 @@ impl BoolTable<'_> {
         }
     }
 
-    fn str_eval(&self, lhs:&str, rhs:&str, op:&str) -> bool {
+    fn str_eval(&self, lhs:&str, rhs:&str, op:&str) -> Result<bool, &str> {
         let mut b_lhs:bool;
         let mut b_rhs:bool;
          
         if self.verbose {println!("str_eval(): Matching operator...");}
-        let b_op:&Operator = self.charset.get(op).unwrap();
+        let b_op:&Operator = match self.charset.get(op) {
+            Some(op) => op,
+            None => return Err("Invalid operator!"),
+        };
         if self.verbose {println!("str_eval(): Matched operator: {}", b_op);}
 
         if lhs.contains("(") {
             if self.verbose {println!("str_eval(): lhs impossible to evaluate, sending for breakdown");}
-            b_lhs = self.rec_eval(Some(lhs));
+            b_lhs = match self.rec_eval(Some(lhs)) {
+                Ok(val) => val,
+                Err(err) => return Err(err),
+            };
             if lhs.contains("!") {
                 b_lhs = !b_lhs;
             }
@@ -93,7 +100,10 @@ impl BoolTable<'_> {
         
         if rhs.contains("(") {
             if self.verbose {println!("str_eval(): rhs impossible to evaluate, sending for breakdown");}
-            b_rhs = self.rec_eval(Some(rhs));
+            b_rhs = match self.rec_eval(Some(rhs)) {
+                Ok(val) => val,
+                Err(err) => return Err(err),
+            };
             if rhs.contains("!") {
                 b_rhs = !b_rhs;
             }
@@ -112,7 +122,7 @@ impl BoolTable<'_> {
         if self.verbose {println!("str_eval(): Evaluating...");}
         let result:bool = self.eval(b_lhs, b_rhs, b_op);
         if self.verbose {println!("str_eval(): Result: {}", result);}
-        return result;
+        return Ok(result);
     }
 
     fn get_val(&self, var:&str) -> bool {
@@ -123,20 +133,20 @@ impl BoolTable<'_> {
         return val;
     }
 
-    pub fn rec_eval(&self, equation:Option<&str>) -> bool {
+    pub fn rec_eval(&self, equation:Option<&str>) -> Result<bool, &str> {
         let eq = equation.unwrap_or(self.equation);
         if self.verbose {println!("rec_eval(): Evaluation: {} With int repr: {:#010b}", eq, self.curr_int);}
         
         let Some(parts) = self.re.captures(&eq) else {
             if self.verbose {println!("invalid string!");}
-            return false;
+            return Err("Invalid string!");
         };
         if self.verbose {println!("rec_eval(): evaluting:{} {} {}",&parts["lhs"], &parts["rhs"], &parts["op"]);}
         let answr = self.str_eval(&parts["lhs"], &parts["rhs"], &parts["op"]);
         return answr;
     }
 
-    pub fn create_table(&mut self) {
+    pub fn create_table(&mut self) -> Result<(), &str> {
         let complete_add_value:u128 = !self.tr_val_int;
         let size = self.var_to_indx.len();
 
@@ -152,10 +162,19 @@ impl BoolTable<'_> {
                 line.push(curr_val);
             }
             if self.verbose {println!("----------Calling for recursive evaluation!----------");}
-            line.push(self.rec_eval(None));
+            let result = self.rec_eval(None);
+            if result.is_err() {
+                return Err("Invalid Boolean Equation!");
+            } 
+            let mut push_val = result.unwrap();
+            if self.equation.chars().nth(0).unwrap() == '!'{
+                push_val = !push_val
+            }
+            line.push(push_val);
             self.result_table.push(line);
             self.curr_int += 1;
             if self.verbose {println!("----------Recursive Evaluation done----------\n");}
         }
+        Ok(())
     }
 }

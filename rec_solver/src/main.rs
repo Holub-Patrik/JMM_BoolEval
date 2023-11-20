@@ -141,7 +141,7 @@ fn main() {
         for (_,[var]) in VAR_RE.captures_iter(&tr_vars).map(|c| c.extract()) {
             let pow_val = match var_to_indx.get(var) {
                 Some(v) => v,
-                None => {println!("Incorect variable name when defining always true variables.\n Problematic name: {}", var);return;},
+                None => {println!("Incorect variable name when defining always true variables.\n Problematic name: {}", var);return},
             };
             tr_val_int += 2_u128.pow(*pow_val as u32)
         }
@@ -158,12 +158,18 @@ fn main() {
             println!("Evaluation begins!");
             eval = Instant::now();
         }
-        let _ = table_struct.create_table();
-        if performace {
-            let eval_took = eval.elapsed();
-            println!("Evaluation took: {:?}", eval_took);
+        let build = table_struct.create_table();
+        match build {
+            Ok(_) => {
+                if performace {
+                    let eval_took = eval.elapsed();
+                    println!("Evaluation took: {:?}", eval_took);
+                }
+                if verbose {println!("Hopefully created the table!");}
+                pretty_print(table_struct.result_table, vars, equ)
+            },
+            Err(msg) => println!("{}", msg),
+            
         }
-        if verbose {println!("Hopefully created the table!");}
-        pretty_print(table_struct.result_table, vars, equ)
     }
 }

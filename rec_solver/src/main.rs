@@ -125,9 +125,9 @@ fn main() {
         let mut vars:Vec<&str> = vec![];
         for (_,[var]) in VAR_RE.captures_iter(&equ).map(|c| c.extract()) {
             //println!("Found var: {} and giving index: {}", var, i);
-            vars.push(var);
             match var_to_indx.entry(var) {
                 std::collections::hash_map::Entry::Vacant(_) => {
+                    vars.push(var);
                     var_to_indx.insert(var, i);
                     i += 1;
                 },

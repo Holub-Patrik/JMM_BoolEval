@@ -56,14 +56,21 @@ fn pretty_print(table:Vec<Vec<bool>>, vars:Vec<&str>, equ:&str) {
         let mut write_line = String::from("| ");
         let mut peek_line = line.iter().peekable();
         while let Some(val) = peek_line.next() {
-            let write_val = match val {
-                true => "T",
-                false => "F",
-            };
-            if peek_line.peek().is_none() {
-                write_line.push_str(&format!("{:^1$} | ", write_val, eq_width));
-            } else {
-                write_line.push_str(&format!("{:^1$} | ", write_val, max_width));
+            match val {
+                true => {
+                    if peek_line.peek().is_none() {
+                        write_line.push_str(&format!("\x1b[32m{:^1$}\x1b[0m | ", "T", eq_width));
+                    } else {
+                        write_line.push_str(&format!("\x1b[32m{:^1$}\x1b[0m | ", "T", max_width));
+                    }
+                },
+                false => {
+                    if peek_line.peek().is_none() {
+                        write_line.push_str(&format!("\x1b[31m{:^1$}\x1b[0m | ", "F", eq_width));
+                    } else {
+                        write_line.push_str(&format!("\x1b[31m{:^1$}\x1b[0m | ", "F", max_width));
+                    }
+                },
             }
         }
         println!("{}", write_line)
